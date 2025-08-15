@@ -14,7 +14,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #1d1d1d;
     --foreground: #ededed;
   }
 }
@@ -23,4 +23,14 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Change the background of the calendar's day headers */
+.fc-col-header-cell {
+  background-color: #1F2937; /* A dark grey */
+}
+
+/* Change the text colour of events */
+.fc-event-main {
+  color: #fff !important; /* Force white text */
 }
