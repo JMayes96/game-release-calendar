@@ -43,8 +43,8 @@ export async function GET(request: Request) {
         title: game.name,
         releaseDate: game.released,
         platform: game.platforms?.map((p: any) => p.platform.name).join(', ') || 'TBA',
-        // ✨ NEW: Add a list of genre names
         genres: game.genres?.map((g: any) => g.name) || [],
+        backgroundImage: game.background_image, 
     }));
 
     return NextResponse.json({ releases: relevantData });

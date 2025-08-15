@@ -14,11 +14,14 @@ export default async function HomePage() {
   const releases = await getGameReleases();
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 md:p-12">
-      <div className="w-full max-w-6xl">
-        <h1 className="text-4xl font-bold mb-8 text-center">Game Release Calendar</h1>
-        {/* Render the CalendarView and pass the fetched data to it */}
-        <CalendarView releases={releases} />
+    <main className="flex min-h-screen flex-col items-center p-4 md:p-8">
+      <div className="w-full max-w-7xl mx-auto">
+        <h1 className="text-4xl md:text-5xl font-bold mb-8 text-center text-accent">
+          Game Release Calendar
+        </h1>
+        <div className="calendar-container">
+          <CalendarView releases={releases} />
+        </div>
       </div>
     </main>
   );

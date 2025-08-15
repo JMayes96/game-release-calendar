@@ -4,64 +4,134 @@
 import { useState } from 'react';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
-import { EventClickArg } from '@fullcalendar/core';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import listPlugin from '@fullcalendar/list';
+import { EventClickArg, EventContentArg, EventMountArg } from '@fullcalendar/core';
+import GameDetailModal from './GameDetailModal';
+import tippy from 'tippy.js';
+import 'tippy.js/dist/tippy.css';
+import 'tippy.js/themes/translucent.css';
 
+// ✨ UPDATED: Add backgroundImage to the interface
 interface Release {
   id: number;
   title: string;
   releaseDate: string;
   platform: string;
-  genres: string[];
+  genres:string[];
+  backgroundImage: string;
 }
 
 interface GameCalendarProps {
   releases: Release[];
+  trackedGames: Set<number>;
+  onTrackGame: (gameId: number) => void;
 }
 
-export default function GameCalendar({ releases }: GameCalendarProps) {
-  // ✨ NEW: State to hold the currently selected game for the details view
-  const [selectedGame, setSelectedGame] = useState<Release | null>(null);
+const getPlatformColor = (platform: string): string => {
+  // ... (this function remains the same)
+  if (platform.includes('PlayStation')) return '#0070d1';
+  if (platform.includes('Xbox')) return '#107c10';
+  if (platform.includes('PC')) return '#d3d3d3';
+  if (platform.includes('Nintendo')) return '#e60012';
+  return '#808080';
+};
 
+export default function GameCalendar({ releases, trackedGames, onTrackGame }: GameCalendarProps) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [gameDetails, setGameDetails] = useState<any>(null);
+  
   const events = releases.map(release => ({
     id: release.id.toString(),
     title: release.title,
     date: release.releaseDate,
     allDay: true,
-    extendedProps: { ...release } // Pass the whole release object
+    extendedProps: { ...release },
+    backgroundColor: trackedGames.has(release.id) ? '#7c3aed' : '#282828',
+    borderColor: trackedGames.has(release.id) ? '#a78bfa' : '#282828',
   }));
 
-  const handleEventClick = (clickInfo: EventClickArg) => {
-    // Set the selected game from the event's extendedProps
-    setSelectedGame(clickInfo.event.extendedProps as Release);
+  const handleEventClick = async (clickInfo: EventClickArg) => {
+    // ... (this function remains the same)
+    setIsModalOpen(true);
+    setGameDetails({ name: clickInfo.event.title });
+    try {
+      const res = await fetch(`/api/game/${clickInfo.event.id}`);
+      const data = await res.json();
+      setGameDetails(data);
+    } catch (error) {
+      console.error("Failed to fetch game details:", error);
+    }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setGameDetails(null);
+  };
+  
+  const renderEventContent = (eventInfo: EventContentArg) => {
+    // ... (this function remains the same)
+    const isTracked = trackedGames.has(Number(eventInfo.event.id));
+    const firstPlatform = (eventInfo.event.extendedProps.platform as string).split(', ')[0];
+    const platformColor = getPlatformColor(firstPlatform);
+    return (
+      <div className="flex items-center gap-2 w-full overflow-hidden">
+        {isTracked && <span className="text-yellow-400">★</span>}
+        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: platformColor }}></span>
+        <span className="truncate">{eventInfo.event.title}</span>
+      </div>
+    );
+  };
+
+// src/components/GameCalendar.tsx
+
+  // ... (the rest of the component stays the same) ...
+
+  const handleEventDidMount = (info: EventMountArg) => {
+    const { title, platform, backgroundImage } = info.event.extendedProps;
+    tippy(info.el, {
+      // ✨ Brute-force styling applied directly in the HTML
+      content: `
+        <div style="width: 250px; text-align: left;">
+          <img 
+            src="${backgroundImage}" 
+            alt="${title}" 
+            style="width: 100%; height: 120px; object-fit: cover; border-radius: 3px; margin-bottom: 4px;" 
+          />
+          <h4 style="font-weight: bold;">${title}</h4>
+          <p style="font-size: 12px;">${platform}</p>
+        </div>
+      `,
+      allowHTML: true,
+      theme: 'translucent',
+      placement: 'top',
+      animation: 'shift-away-subtle',
+      // We will leave this JS config in as a fallback
+      maxWidth: 250, 
+    });
   };
 
   return (
-    <div className="relative">
-      {/* ✨ NEW: On-screen details panel */}
-      {selectedGame && (
-        <div className="bg-gray-900 border border-gray-700 p-4 rounded-lg mb-4 shadow-xl">
-          <div className="flex justify-between items-center">
-            <h3 className="text-2xl font-bold text-emerald-400">{selectedGame.title}</h3>
-            <button onClick={() => setSelectedGame(null)} className="text-gray-400 hover:text-white text-2xl">&times;</button>
-          </div>
-          <p className="text-gray-300 mt-2"><strong>Release Date:</strong> {selectedGame.releaseDate}</p>
-          <p className="text-gray-300"><strong>Platform(s):</strong> {selectedGame.platform}</p>
-          <p className="text-gray-300"><strong>Genres:</strong> {selectedGame.genres.join(', ')}</p>
-        </div>
-      )}
-
+    <div className="bg-[#1e1e1e] text-white p-4 rounded-lg shadow-lg">
       <FullCalendar
-        plugins={[dayGridPlugin]}
+        plugins={[dayGridPlugin, timeGridPlugin, listPlugin]}
         initialView="dayGridMonth"
         events={events}
         eventClick={handleEventClick}
         headerToolbar={{
           left: 'prev,next today',
           center: 'title',
-          right: 'dayGridMonth'
+          right: 'dayGridMonth,timeGridWeek,listWeek'
         }}
         height="auto"
-        eventColor="#10B981"
+        eventContent={renderEventContent}
+        eventDidMount={handleEventDidMount}
+      />
+
+      <GameDetailModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        game={gameDetails}
       />
     </div>
   );
