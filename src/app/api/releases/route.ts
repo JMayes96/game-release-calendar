@@ -11,7 +11,7 @@ function getNext90Days() {
   return `${formatDate(today)},${formatDate(futureDate)}`;
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   const apiKey = process.env.RAWG_API_KEY;
 
   if (!apiKey) {
@@ -38,12 +38,12 @@ export async function GET(request: Request) {
     const data = await apiResponse.json();
 
     // We only need a few fields for our calendar
-    const relevantData = data.results.map((game: any) => ({
+    const relevantData = data.results.map((game: { id: number; name: string; released: string; platforms?: Array<{ platform: { name: string } }>; genres?: Array<{ name: string }>; background_image: string }) => ({
         id: game.id,
         title: game.name,
         releaseDate: game.released,
-        platform: game.platforms?.map((p: any) => p.platform.name).join(', ') || 'TBA',
-        genres: game.genres?.map((g: any) => g.name) || [],
+        platform: game.platforms?.map((p) => p.platform.name).join(', ') || 'TBA',
+        genres: game.genres?.map((g) => g.name) || [],
         backgroundImage: game.background_image, 
     }));
 

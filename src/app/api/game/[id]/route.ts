@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 // ✨ REMOVED 'default' from the export here
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: { id: string } }
 ) {
   const apiKey = process.env.RAWG_API_KEY;
