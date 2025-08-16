@@ -37,8 +37,18 @@ export async function GET() {
 
     const data = await apiResponse.json();
 
+    // Define proper interfaces for the RAWG API response
+    interface RawgGame {
+      id: number;
+      name: string;
+      released: string;
+      platforms?: Array<{ platform: { name: string } }>;
+      genres?: Array<{ name: string }>;
+      background_image: string;
+    }
+
     // We only need a few fields for our calendar
-    const relevantData = data.results.map((game: { id: number; name: string; released: string; platforms?: Array<{ platform: { name: string } }>; genres?: Array<{ name: string }>; background_image: string }) => ({
+    const relevantData = data.results.map((game: RawgGame) => ({
         id: game.id,
         title: game.name,
         releaseDate: game.released,

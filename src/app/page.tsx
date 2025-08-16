@@ -1,6 +1,6 @@
 // src/app/page.tsx
 import CalendarView from '@/components/CalendarView';
-import type { Release } from '@/types';
+import type { Release } from './type';
 
 // ✨ This function now contains the logic from your old API route
 async function getGameReleases(): Promise<Release[]> {
@@ -38,12 +38,22 @@ async function getGameReleases(): Promise<Release[]> {
 
     const data = await apiResponse.json();
 
-    const relevantData = data.results.map((game: any): Release => ({
+    // Define proper interfaces for the RAWG API response
+    interface RawgGame {
+      id: number;
+      name: string;
+      released: string;
+      platforms?: Array<{ platform: { name: string } }>;
+      genres?: Array<{ name: string }>;
+      background_image: string;
+    }
+
+    const relevantData = data.results.map((game: RawgGame): Release => ({
       id: game.id,
       title: game.name,
       releaseDate: game.released,
-      platform: game.platforms?.map((p: any) => p.platform.name).join(', ') || 'TBA',
-      genres: game.genres?.map((g: any) => g.name) || [],
+      platform: game.platforms?.map((p) => p.platform.name).join(', ') || 'TBA',
+      genres: game.genres?.map((g) => g.name) || [],
       backgroundImage: game.background_image,
     }));
 
