@@ -2,7 +2,8 @@
 import CalendarView from '@/components/CalendarView'; // Import our new interactive component
 
 async function getGameReleases() {
-  const res = await fetch('http://localhost:3000/api/releases', {
+  // ✨ CHANGE THIS LINE
+  const res = await fetch('/api/releases', {
     cache: 'no-store'
   });
   if (!res.ok) throw new Error('Failed to fetch data');
