@@ -4,10 +4,11 @@ import { NextResponse } from 'next/server';
 // ✨ REMOVED 'default' from the export here
 export async function GET(
   _request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const apiKey = process.env.RAWG_API_KEY;
-  const gameId = params.id;
+  const resolvedParams = await params;
+  const gameId = resolvedParams.id;
 
   console.log(`Fetching details for game ID: ${gameId}`);
 
