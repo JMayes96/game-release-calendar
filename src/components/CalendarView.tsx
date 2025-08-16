@@ -3,32 +3,19 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import GameCalendar from './GameCalendar';
-
-// (Keep your Release and CalendarViewProps interfaces the same)
-interface Release {
-  id: number;
-  title: string;
-  releaseDate: string;
-  platform: string;
-  genres: string[];
-  backgroundImage: string;
-}
+import type { Release } from '../app/type'; // ✨ Import shared type
 
 interface CalendarViewProps {
   releases: Release[];
 }
 
 export default function CalendarView({ releases }: CalendarViewProps) {
-  // ✨ NEW: State for the search query
+  // ... No other changes needed in this file. All the state and filtering logic remains the same.
   const [searchQuery, setSearchQuery] = useState('');
-  
-  // ✨ NEW: State for tracked games (using a Set for efficiency)
   const [trackedGames, setTrackedGames] = useState<Set<number>>(new Set());
-  
   const [platformFilter, setPlatformFilter] = useState('All');
   const [genreFilter, setGenreFilter] = useState('All');
 
-  // ✨ NEW: Load tracked games from Local Storage when the component mounts
   useEffect(() => {
     const storedTrackedGames = localStorage.getItem('trackedGames');
     if (storedTrackedGames) {
@@ -36,12 +23,10 @@ export default function CalendarView({ releases }: CalendarViewProps) {
     }
   }, []);
 
-  // ✨ NEW: Save tracked games to Local Storage whenever they change
   useEffect(() => {
     localStorage.setItem('trackedGames', JSON.stringify(Array.from(trackedGames)));
   }, [trackedGames]);
 
-  // ✨ NEW: Function to add/remove a game from the tracked list
   const handleTrackGame = (gameId: number) => {
     setTrackedGames(prevTracked => {
       const newTracked = new Set(prevTracked);
@@ -57,7 +42,6 @@ export default function CalendarView({ releases }: CalendarViewProps) {
   const platforms = useMemo(() => ['All', ...new Set(releases.map(r => r.platform.split(', ')).flat().sort())], [releases]);
   const genres = useMemo(() => ['All', ...new Set(releases.map(r => r.genres).flat().sort())], [releases]);
 
-  // ✨ UPDATED: Filtering logic now includes the search query
   const filteredReleases = useMemo(() => {
     return releases.filter(release => {
       const platformMatch = platformFilter === 'All' || release.platform.includes(platformFilter);
@@ -69,22 +53,11 @@ export default function CalendarView({ releases }: CalendarViewProps) {
 
   return (
     <div>
-      {/* ✨ NEW: Search Bar */}
       <div className="mb-6">
         <label htmlFor="search-game" className="block text-sm font-medium text-gray-400 mb-1">Search Game</label>
-        <input
-          type="text"
-          id="search-game"
-          className="w-full bg-[#1e1e1e] border-[#2d2d2d] rounded-md p-2 text-white"
-          placeholder="Search for a title..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
+        <input type="text" id="search-game" className="w-full bg-[#1e1e1e] border-[#2d2d2d] rounded-md p-2 text-white" placeholder="Search for a title..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
       </div>
-
-      {/* Filter UI (remains the same) */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
-        {/* ... platform and genre select dropdowns ... */}
         <div className="flex-1">
           <label htmlFor="platform-filter" className="block text-sm font-medium text-gray-400 mb-1">Platform</label>
           <select id="platform-filter" className="w-full bg-[#1e1e1e] border-[#2d2d2d] rounded-md p-2 text-white" value={platformFilter} onChange={(e) => setPlatformFilter(e.target.value)}>
@@ -98,13 +71,7 @@ export default function CalendarView({ releases }: CalendarViewProps) {
           </select>
         </div>
       </div>
-
-      {/* ✨ UPDATED: Pass tracked games state and handler to the calendar */}
-      <GameCalendar
-        releases={filteredReleases}
-        trackedGames={trackedGames}
-        onTrackGame={handleTrackGame}
-      />
+      <GameCalendar releases={filteredReleases} trackedGames={trackedGames} onTrackGame={handleTrackGame} />
     </div>
   );
 }

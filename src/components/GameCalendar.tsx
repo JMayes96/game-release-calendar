@@ -11,16 +11,7 @@ import GameDetailModal from './GameDetailModal';
 import tippy from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
 import 'tippy.js/themes/translucent.css';
-
-// ✨ UPDATED: Add backgroundImage to the interface
-interface Release {
-  id: number;
-  title: string;
-  releaseDate: string;
-  platform: string;
-  genres:string[];
-  backgroundImage: string;
-}
+import type { Release, GameDetails } from '@/app/type'; // ✨ Import shared types
 
 interface GameCalendarProps {
   releases: Release[];
@@ -29,7 +20,6 @@ interface GameCalendarProps {
 }
 
 const getPlatformColor = (platform: string): string => {
-  // ... (this function remains the same)
   if (platform.includes('PlayStation')) return '#0070d1';
   if (platform.includes('Xbox')) return '#107c10';
   if (platform.includes('PC')) return '#d3d3d3';
@@ -39,8 +29,8 @@ const getPlatformColor = (platform: string): string => {
 
 export default function GameCalendar({ releases, trackedGames, onTrackGame }: GameCalendarProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [gameDetails, setGameDetails] = useState<any>(null);
-  
+  const [gameDetails, setGameDetails] = useState<GameDetails | null>(null); // ✨ Use the shared type
+
   const events = releases.map(release => ({
     id: release.id.toString(),
     title: release.title,
@@ -52,9 +42,8 @@ export default function GameCalendar({ releases, trackedGames, onTrackGame }: Ga
   }));
 
   const handleEventClick = async (clickInfo: EventClickArg) => {
-    // ... (this function remains the same)
     setIsModalOpen(true);
-    setGameDetails({ name: clickInfo.event.title });
+    setGameDetails({ name: clickInfo.event.title, id: Number(clickInfo.event.id), background_image: '' });
     try {
       const res = await fetch(`/api/game/${clickInfo.event.id}`);
       const data = await res.json();
@@ -70,7 +59,6 @@ export default function GameCalendar({ releases, trackedGames, onTrackGame }: Ga
   };
   
   const renderEventContent = (eventInfo: EventContentArg) => {
-    // ... (this function remains the same)
     const isTracked = trackedGames.has(Number(eventInfo.event.id));
     const firstPlatform = (eventInfo.event.extendedProps.platform as string).split(', ')[0];
     const platformColor = getPlatformColor(firstPlatform);
@@ -83,31 +71,14 @@ export default function GameCalendar({ releases, trackedGames, onTrackGame }: Ga
     );
   };
 
-// src/components/GameCalendar.tsx
-
-  // ... (the rest of the component stays the same) ...
-
   const handleEventDidMount = (info: EventMountArg) => {
     const { title, platform, backgroundImage } = info.event.extendedProps;
     tippy(info.el, {
-      // ✨ Brute-force styling applied directly in the HTML
-      content: `
-        <div style="width: 250px; text-align: left;">
-          <img 
-            src="${backgroundImage}" 
-            alt="${title}" 
-            style="width: 100%; height: 120px; object-fit: cover; border-radius: 3px; margin-bottom: 4px;" 
-          />
-          <h4 style="font-weight: bold;">${title}</h4>
-          <p style="font-size: 12px;">${platform}</p>
-        </div>
-      `,
+      content: `<div class="p-1 max-w-xs"><img src="${backgroundImage}" alt="${title}" class="tippy-image rounded-md mb-2" /><h4 class="font-bold">${title}</h4><p class="text-xs">${platform}</p></div>`,
       allowHTML: true,
       theme: 'translucent',
       placement: 'top',
       animation: 'shift-away-subtle',
-      // We will leave this JS config in as a fallback
-      maxWidth: 250, 
     });
   };
 
@@ -132,6 +103,9 @@ export default function GameCalendar({ releases, trackedGames, onTrackGame }: Ga
         isOpen={isModalOpen}
         onClose={closeModal}
         game={gameDetails}
+        // ✨ Pass the tracking props down to the modal
+        onTrackGame={onTrackGame}
+        isTracked={gameDetails ? trackedGames.has(gameDetails.id) : false}
       />
     </div>
   );
